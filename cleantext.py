@@ -139,13 +139,13 @@ def sanitize(text):
 
     # 4. Separate all external punctuation such as periods, commas, etc. into their own tokens
     text = stepFour(text)
-    #print("/////////////")
-    #print(text)
+    # print("/////////////")
+    # print(text)
 
     # 5
     text = stepFive(text)
-    #print("/////////////")
-    #print(text)
+    # print("/////////////")
+    # print(text)
 
     # 6. Convert all text to lowercase
     text = text.lower()
@@ -255,11 +255,42 @@ def stepFour(s):
 
 
 
+# def stepFive(s):
+#     # s = s.lower()
+#     regex = "[^a-z0-9.,?!;:'\-$% ]"
+#     v = re.sub(regex," ",s)
+#     return v
+
 def stepFive(s):
     s = s.lower()
-    regex = "[^a-z0-9.,?!;:'\-$ ]"
-    v = re.sub(regex," ",s)
-    return v
+    # keep list of words to remove from sentence
+    remove = []
+
+    # if character isn't in the list below
+    regex = "[^a-z0-9.?!,;:$%' ]+"
+
+    # split sentence into tokens
+    spl = s.split()
+    # print("****")
+
+    for word in spl:
+        if(re.match(regex, word) != None):
+
+            # matches internal punctuation
+            reg_between = "[a-z0-9]+[^a-z0-9][a-z0-9]+"
+            # print(word)
+            if(re.match(reg_between, word) == None):
+                remove.append(word)
+
+    for word in remove:
+        spl.remove(word)
+
+    result = " ".join(spl)
+    # print(result)
+    # print("****")
+
+    # v = re.sub(regex," ",s)
+    return result
 
 def main():
 
@@ -276,6 +307,7 @@ def main():
 
     data = []
 
+    # UNCOMMENT
     for line in file:
         # print(line)
         parsed = json.loads(line)
@@ -284,6 +316,9 @@ def main():
 
     for line in data:
         print(line)
+    # UNCOMMENT
+
+    # sanitize("hate to break it to you, but the (((globalists))) only exist in your tiny, blackened heart.")
 
     # print(stepFour("\"oh you'll\""))
 
