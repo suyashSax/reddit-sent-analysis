@@ -121,23 +121,31 @@ def sanitize(text):
 
     # 1. Replace new lines and tab characters with a single space.
     text = replaceBreaks(text)
-    # print(text)
+    #print("------------------")
+    #print(text)
 
     # 2. Remove URLs
     text = splitURLs(text)
+    #print("/////////////")
+    #print(text)
     # print(text)
 
     # 3. Split text on a single space.
     # If there are multiple contiguous spaces, you will need to remove empty tokens after doing the split.
     text = splitSpace(text)
+    #print("/////////////")
+    #print(text)
     # print(text)
 
     # 4. Separate all external punctuation such as periods, commas, etc. into their own tokens
     text = stepFour(text)
-    # print(text)
+    #print("/////////////")
+    #print(text)
 
     # 5
     text = stepFive(text)
+    #print("/////////////")
+    #print(text)
 
     # 6. Convert all text to lowercase
     text = text.lower()
@@ -147,12 +155,11 @@ def sanitize(text):
 
     text = text.strip()
 
-    unigrams = ngrams(text, 1)
-    bigrams = ngrams(text, 2)
-    trigrams = ngrams(text, 3)
     # print(text)
+    return text
 
-    return [text, unigrams, bigrams, trigrams]
+    # TODO: return the below structure
+    # return [parsed_text, unigrams, bigrams, trigrams]
 
 def replaceBreaks(s):
     s.replace('\n', ' ')
@@ -170,59 +177,65 @@ def splitSpace(s):
 
 # from string import punctuation
 def stepFour(s):
-    #split the string by whitespace into a list
     s = s.split()
 
-    #duplicate that list so we can do some modifications on that list
-    final_strings = s[:]
+    modify_ends = s[:]
+    result_strings = s[:]
 
     for word in range(len(s)):
-        #pad any punctuation with white space using regex
-        # x = re.sub("(?<! )(?=['_.:,!;?()-])|(?<=['_.:,!;?()-])(?! )", r' ', s[word])
-        x = re.sub("(?<! )(?=[_.:,!;?()-])|(?<=[_.:,!;?()-])(?! )", r' ', s[word])
-        s[word] = x
+        if(s[word][0] in punctuation and s[word][-1] in punctuation):
+            modify_ends[word] = s[word][0] + " " + s[word][1:-1] + " " + s[word][-1]
 
+        elif(s[word][-1] in punctuation):
+            modify_ends[word] = s[word][:-1] + " " + s[word][-1]
 
-        final_strings[word] = s[word]
+        elif(s[word][0] in punctuation):
+            modify_ends[word] = s[word][0] + " " + s[word][1:]
+            #print final_strings[word]
 
-        #iterate through each string in the list
-        for char in range(len(s[word])):
-            if(s[word][char] in punctuation):
+        else:
+            result_strings[word] = modify_ends[word]
+            continue
+
+        #print(final_strings)
+
+        result_strings[word] = modify_ends[word][0]
+
+        #print(final_strings[word])
+
+        for char in range(1, len(modify_ends[word])-1):
+            if(modify_ends[word][char] in punctuation):
                 #if there is a punctuation mark that is surrounded by two letters, then delete the whitespace
-                if(char - 2 >= 0 and char+2 <= len(s[word])-1):
-                    if((s[word][char-2].isalpha() or s[word][char-2].isdigit()) and (s[word][char+2].isalpha() or s[word][char-2].isdigit())):
-                        final_strings[word] = s[word][:char-1] + s[word][char] + s[word][char+2:]
+                if((modify_ends[word][char-1].isalpha() or modify_ends[word][char-1].isdigit()) and (modify_ends[word][char+1].isalpha() or modify_ends[word][char-1].isdigit())):
+                    result_strings[word] += modify_ends[word][char]
+                elif (modify_ends[word][char-1].isalpha() or modify_ends[word][char-1].isdigit()):
+                    result_strings[word] += " " + modify_ends[word][char]
+                    #print(result_strings[word])
 
+                elif (modify_ends[word][char+1].isalpha() or modify_ends[word][char+1].isdigit()):
+                    result_strings[word] += modify_ends[word][char]+" "
 
-    s = ' '.join(final_strings)
+                else:
+                    result_strings[word] += " " + modify_ends[word][char]
+
+            else:
+                result_strings[word] += modify_ends[word][char]
+
+        if(len(s[word]) > 1):
+            result_strings[word] += modify_ends[word][-1]
+
+    s = ' '.join(result_strings)
     s = re.sub("\\s+"," ", s)
     s = s.strip()
     return s
+
+
 
 def stepFive(s):
     s = s.lower()
     regex = "[^a-z0-9.,?!;:'\-$ ]"
     v = re.sub(regex," ",s)
     return v
-
-def ngrams(input, n):
-    input = input.replace(',','.').replace('!','.').replace('?','.').replace(':','.').replace(';','.')
-    phrases=input.split('.')
-    i=0
-    while(i<len(phrases)):
-        phrases[i]=phrases[i].strip()
-        phrases[i]=phrases[i].split()
-        if (len(phrases[i])<n):
-            del phrases[i]
-            i-=1
-        i+=1
-    output = []
-    for p in phrases:
-        for i in range(len(p)-n+1):
-            output.append(p[i:i+n])
-    for i in range(len(output)):
-        output[i]='_'.join(output[i])
-    return ' '.join(output)
 
 def main():
 
@@ -247,6 +260,10 @@ def main():
 
     for line in data:
         print(line)
+
+    # print(stepFour("\"oh you'll\""))
+
+
     # print(data)
 
 
