@@ -155,11 +155,12 @@ def sanitize(text):
 
     text = text.strip()
 
+    unigrams = ngrams(text, 1)
+    bigrams = ngrams(text, 2)
+    trigrams = ngrams(text, 3)
     # print(text)
-    return text
 
-    # TODO: return the below structure
-    # return [parsed_text, unigrams, bigrams, trigrams]
+    return [text, unigrams, bigrams, trigrams]
 
 def replaceBreaks(s):
     s.replace('\n', ' ')
@@ -253,6 +254,7 @@ def stepFour(s):
     s = s.strip()
     return s
 
+<<<<<<< HEAD
 
 
 # def stepFive(s):
@@ -261,6 +263,8 @@ def stepFour(s):
 #     v = re.sub(regex," ",s)
 #     return v
 
+=======
+>>>>>>> 9670538834cdf8898448651fb6bd1843c9c06c20
 def stepFive(s):
     s = s.lower()
     # keep list of words to remove from sentence
@@ -292,18 +296,42 @@ def stepFive(s):
     # v = re.sub(regex," ",s)
     return result
 
+def ngrams(input, n):
+    input = input.replace(',','.').replace('!','.').replace('?','.').replace(':','.').replace(';','.')
+    phrases=input.split('.')
+    i=0
+    while(i<len(phrases)):
+        phrases[i]=phrases[i].strip()
+        phrases[i]=phrases[i].split()
+        if (len(phrases[i])<n):
+            del phrases[i]
+            i-=1
+        i+=1
+    output = []
+    for p in phrases:
+        for i in range(len(p)-n+1):
+            output.append(p[i:i+n])
+    for i in range(len(output)):
+        output[i]='_'.join(output[i])
+    return ' '.join(output)
+
 def main():
 
     if(len(sys.argv) != 2):
         print("pass one file to the script")
         sys.exit()
 
+    filename = sys.argv[1]
+
+    extension = os.path.splitext(filename)[1]
+
     try:
-        file = open(sys.argv[1], "r")
+        if extension == '.bz2':
+            file = bz2.BZ2File(filename, 'rb', 1000000)
+        else:
+            file = open(filename, "r")
     except OSError:
         print("can't open file")
-    # else:
-    #     print(file)
 
     data = []
 
@@ -327,8 +355,6 @@ def main():
 
 
     # sanitize("I'm afraid I can't explain myself, sir. Because I am not myself, you see?")
-
-
 
 if __name__ == "__main__":
     # This is the Python main function.
