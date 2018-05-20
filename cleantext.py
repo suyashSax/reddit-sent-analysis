@@ -147,11 +147,12 @@ def sanitize(text):
 
     text = text.strip()
 
+    unigrams = ngrams(text, 1)
+    bigrams = ngrams(text, 2)
+    trigrams = ngrams(text, 3)
     # print(text)
-    return text
 
-    # TODO: return the below structure
-    # return [parsed_text, unigrams, bigrams, trigrams]
+    return [text, unigrams, bigrams, trigrams]
 
 def replaceBreaks(s):
     s.replace('\n', ' ')
@@ -203,6 +204,25 @@ def stepFive(s):
     regex = "[^a-z0-9.,?!;:'\-$ ]"
     v = re.sub(regex," ",s)
     return v
+
+def ngrams(input, n):
+    input = input.replace(',','.').replace('!','.').replace('?','.').replace(':','.').replace(';','.')
+    phrases=input.split('.')
+    i=0
+    while(i<len(phrases)):
+        phrases[i]=phrases[i].strip()
+        phrases[i]=phrases[i].split()
+        if (len(phrases[i])<n):
+            del phrases[i]
+            i-=1
+        i+=1
+    output = []
+    for p in phrases:
+        for i in range(len(p)-n+1):
+            output.append(p[i:i+n])
+    for i in range(len(output)):
+        output[i]='_'.join(output[i])
+    return ' '.join(output)
 
 def main():
 
