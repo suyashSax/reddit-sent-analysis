@@ -267,13 +267,18 @@ def main():
         print("pass one file to the script")
         sys.exit()
 
+    filename = sys.argv[1]
+
+    extension = os.path.splitext(filename)[1]
+
     try:
-        file = open(sys.argv[1], "r")
+        if extension == '.bz2':
+            file = bz2.BZ2File(filename, 'rb', 1000000)
+        else:
+            file = open(filename, "r")
     except OSError:
         print("can't open file")
-    # else:
-    #     print(file)
-
+  
     data = []
 
     for line in file:
@@ -292,8 +297,6 @@ def main():
 
 
     # sanitize("I'm afraid I can't explain myself, sir. Because I am not myself, you see?")
-
-
 
 if __name__ == "__main__":
     # This is the Python main function.
