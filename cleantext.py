@@ -145,6 +145,8 @@ def sanitize(text):
     # remove extraneous white space
     text = re.sub("\\s+"," ", text)
 
+    text = text.strip()
+
     # print(text)
     return text
 
@@ -175,7 +177,8 @@ def stepFour(s):
 
     for word in range(len(s)):
         #pad any punctuation with white space using regex
-        x = re.sub("(?<! )(?=['_.:,!;?()-])|(?<=['_.:,!;?()-])(?! )", r' ', s[word])
+        # x = re.sub("(?<! )(?=['_.:,!;?()-])|(?<=['_.:,!;?()-])(?! )", r' ', s[word])
+        x = re.sub("(?<! )(?=[_.:,!;?()-])|(?<=[_.:,!;?()-])(?! )", r' ', s[word])
         s[word] = x
 
 
@@ -197,7 +200,7 @@ def stepFour(s):
 
 def stepFive(s):
     s = s.lower()
-    regex = "[^a-z0-9.,?!;:' ]"
+    regex = "[^a-z0-9.,?!;:'\-$ ]"
     v = re.sub(regex," ",s)
     return v
 
