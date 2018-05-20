@@ -184,13 +184,32 @@ def stepFour(s):
 
     for word in range(len(s)):
         if(s[word][0] in punctuation and s[word][-1] in punctuation):
-            modify_ends[word] = s[word][0] + " " + s[word][1:-1] + " " + s[word][-1]
+            if((s[word][0] == '$' or s[word][0] == '%') and (s[word][-1] == "$" or s[word][-1])== '%'):
+                modify_ends[word] = s[word]
+            elif((s[word][0] == '$' or s[word][0] == '%')):
+                modify_ends[word] = s[word][0:-1] + " " + s[word][-1]
+            elif((s[word][-1] == '$' or s[word][-1] == '%')):
+                modify_ends[word] = s[word][0] + " " + s[word][1:-1]
+            else:
+                modify_ends[word] = s[word][0] + " " + s[word][1:-1] + " " + s[word][-1]
 
         elif(s[word][-1] in punctuation):
-            modify_ends[word] = s[word][:-1] + " " + s[word][-1]
+            #print(s[word])
+            if(s[word][-1] == '$' or s[word][-1] == '%'):
+                #print(s[word])
+                modify_ends[word] = s[word]
+            else:
+                modify_ends[word] = s[word][:-1] + " " + s[word][-1]
 
         elif(s[word][0] in punctuation):
-            modify_ends[word] = s[word][0] + " " + s[word][1:]
+            #print(s[word])
+            if(s[word] == "'ol" or s[word] == "'tis'"):
+                result_strings[word] = modify_ends[word]
+            elif(s[word][0] == '$' or s[word][0] == '%'):
+                #print(modify_ends[word])
+                result_strings[word] = modify_ends[word]
+            else:
+                modify_ends[word] = s[word][0] + " " + s[word][1:]
             #print final_strings[word]
 
         else:
@@ -205,15 +224,20 @@ def stepFour(s):
 
         for char in range(1, len(modify_ends[word])-1):
             if(modify_ends[word][char] in punctuation):
-                #if there is a punctuation mark that is surrounded by two letters, then delete the whitespace
                 if((modify_ends[word][char-1].isalpha() or modify_ends[word][char-1].isdigit()) and (modify_ends[word][char+1].isalpha() or modify_ends[word][char-1].isdigit())):
                     result_strings[word] += modify_ends[word][char]
                 elif (modify_ends[word][char-1].isalpha() or modify_ends[word][char-1].isdigit()):
-                    result_strings[word] += " " + modify_ends[word][char]
+                    if(modify_ends[word][char] == "%" or modify_ends[word][char] == "$"):
+                        result_strings[word] += modify_ends[word][char]
+                    else:
+                        result_strings[word] += " " + modify_ends[word][char]
                     #print(result_strings[word])
 
                 elif (modify_ends[word][char+1].isalpha() or modify_ends[word][char+1].isdigit()):
-                    result_strings[word] += modify_ends[word][char]+" "
+                    if(modify_ends[word][char] == "%" or modify_ends[word][char] == "$"):
+                        result_strings[word] += modify_ends[word][char]
+                    else:
+                        result_strings[word] += modify_ends[word][char]+ " "
 
                 else:
                     result_strings[word] += " " + modify_ends[word][char]
