@@ -254,17 +254,6 @@ def stepFour(s):
     s = s.strip()
     return s
 
-<<<<<<< HEAD
-
-
-# def stepFive(s):
-#     # s = s.lower()
-#     regex = "[^a-z0-9.,?!;:'\-$% ]"
-#     v = re.sub(regex," ",s)
-#     return v
-
-=======
->>>>>>> 9670538834cdf8898448651fb6bd1843c9c06c20
 def stepFive(s):
     s = s.lower()
     # keep list of words to remove from sentence
