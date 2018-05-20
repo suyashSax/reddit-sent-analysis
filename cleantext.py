@@ -7,6 +7,8 @@ from __future__ import print_function
 import re
 import string
 import argparse
+import bz2
+import os.path
 
 from string import punctuation
 import sys
@@ -243,8 +245,17 @@ def main():
         print("pass one file to the script")
         sys.exit()
 
+    filename = sys.argv[1]
+
+    extension = os.path.splitext(filename)[1]
+
+    print ("Extension:", extension)
+
     try:
-        file = open(sys.argv[1], "r")
+        if extension == '.bz2':
+            file = bz2.BZ2File(filename, 'rb', 1000000)
+        else:
+            file = open(filename, "r")
     except OSError:
         print("can't open file")
     # else:
