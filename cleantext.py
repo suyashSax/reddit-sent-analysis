@@ -156,7 +156,7 @@ def sanitize(text):
 
     text = text.strip()
 
-    text = text.strip()
+    text = apostrophe(text)
 
     unigrams = ngrams(text, 1)
     bigrams = ngrams(text, 2)
@@ -291,7 +291,19 @@ def stepFive(s):
     return result
 
 def ngrams(input, n):
-    input = input.replace(',','.').replace('!','.').replace('?','.').replace(':','.').replace(';','.')
+    # input = input.replace(',','.').replace('!','.').replace('?','.').replace(':','.').replace(';','.')
+    l=list(input)
+    for i in range(len(l)):
+        if (l[i]==','):
+            if (l[i-1].isdigit() and l[i+1].isdigit()):
+                pass
+            else:
+                l[i]='.'
+        if (l[i]=='!' or l[i]=='?' or l[i]==':' or l[i]==';'):
+            l[i]='.'
+
+    input="".join(l)
+
     phrases=input.split('.')
     i=0
     while(i<len(phrases)):
