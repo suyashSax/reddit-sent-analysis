@@ -155,6 +155,8 @@ def sanitize(text):
 
     text = text.strip()
 
+    text = text.strip()
+
     unigrams = ngrams(text, 1)
     bigrams = ngrams(text, 2)
     trigrams = ngrams(text, 3)
@@ -303,6 +305,37 @@ def ngrams(input, n):
     for i in range(len(output)):
         output[i]='_'.join(output[i])
     return ' '.join(output)
+
+def apostrophe(line):
+    regex = "\s\'\s"
+
+    l = list(line)
+    foundOpen = False
+    open = 0
+    close = 0
+    i = 0
+    while i < len(l) - 2:
+
+        line = "".join(l) # update the string that matches regex
+        # go through string 3 char at a time to match regex
+        curr = l[i:i+3]
+        if(re.match(regex, line[i:i+3]) != None):
+
+            # havent found open
+            if(not foundOpen):
+                foundOpen = True
+                # print(l[i+2:i+3])
+                del l[i+2:i+3]
+
+            # found open
+            elif(foundOpen):
+                foundOpen = False
+                # print(l[i:i+1])
+                del l[i:i+1]
+
+        i += 1
+
+    return "".join(l)
 
 def main():
 
