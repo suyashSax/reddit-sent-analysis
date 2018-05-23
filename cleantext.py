@@ -11,6 +11,7 @@ import argparse
 from string import punctuation
 import sys
 import json
+import os
 
 __author__ = ""
 __email__ = ""
@@ -185,7 +186,9 @@ def stepFour(s):
 
     for word in range(len(s)):
         if(s[word][0] in punctuation and s[word][-1] in punctuation):
-            if((s[word][0] == '$' or s[word][0] == '%') and (s[word][-1] == "$" or s[word][-1])== '%'):
+            if(s[word][0] == '\'' and s[word][-1] == '\''):
+                modify_ends[word] = s[word]
+            elif((s[word][0] == '$' or s[word][0] == '%') and (s[word][-1] == "$" or s[word][-1]== '%')):
                 modify_ends[word] = s[word]
             elif((s[word][0] == '$' or s[word][0] == '%')):
                 modify_ends[word] = s[word][0:-1] + " " + s[word][-1]
@@ -343,7 +346,8 @@ def main():
     # print(data)
 
 
-    # sanitize("I'm afraid I can't explain myself, sir. Because I am not myself, you see?")
+    # for i in sanitize("I'm afraid I can't explain myself, sir. Because I am not myself, you see?"):
+    #     print (i)
 
 if __name__ == "__main__":
     # This is the Python main function.
