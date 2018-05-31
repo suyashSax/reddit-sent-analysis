@@ -1,21 +1,33 @@
+# This is not a script that'll run
+# This is a log of the iPython notebook
+
 #!/usr/bin/env python
 
 # Boilerplate
-from pyspark.sql import SQLContext
 
+from pyspark.sql import SQLContext
 import itertools
 from itertools import chain
-
 from pyspark.sql.types import *
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import udf
 
 sqlContext = SQLContext(sc)
 
-# TASK 1: Load data
+# Parquet Creation
+"""
+df = spark.read.json("comments-minimal.json.bz2")
+df.write.parquet("comments-minimal.parquet")
+"""
+
 sc.addPyFile("cleantext.py")
+df = sqlContext.read.parquet("comments-minimal.parquet")
+
+"""
 comments = sqlContext.read.json("comments-minimal.json.bz2")
 submissions = sqlContext.read.json("submissions.json.bz2")
 labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=":", inferSchema="true", header="true")
-
+"""
 # TASK 2
 
 # QUESTION 1:
@@ -105,26 +117,15 @@ Why is given table not normalized?
 
 # READ: https://docs.databricks.com/spark/latest/spark-sql/udf-in-python.html
 
-# TASK 4
+# TASK 4 & 5
 """
 Spark UDF for n-gram generation on the comment body...
 """
 from cleantext import ngrams
-from pyspark.sql.types import StringType
-from pyspark.sql.functions import udf
 
 sqlContext.udf.register("func", ngrams)
-
-f1 = udf(lambda z: ngrams(z, 1), StringType())
-f2 = udf(lambda z: ngrams(z, 2), StringType())
-f3 = udf(lambda z: ngrams(z, 3), StringType())
-
-df = df.select('*', f1('body').alias('unigrams'), f2('body').alias('bigrams'), f3('body').alias('trigrams'))
-
-# TODO: TASK 5
-"""
-Spark UDF to join all n-grams into a single column string
-"""
+f = udf(lambda x: sanitize(x)[1:], ArrayType(StringType()));
+df_grams = df.select('*', f('body').alias('grams'))
 
 # TODO: TASK 6: PROBABLY THE HARDEST PART
 """
