@@ -105,10 +105,21 @@ Why is given table not normalized?
 
 # READ: https://docs.databricks.com/spark/latest/spark-sql/udf-in-python.html
 
-# TODO: TASK 4
+# TASK 4
 """
 Spark UDF for n-gram generation on the comment body...
 """
+from cleantext import ngrams
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import udf
+
+sqlContext.udf.register("func", ngrams)
+
+f1 = udf(lambda z: ngrams(z, 1), StringType())
+f2 = udf(lambda z: ngrams(z, 2), StringType())
+f3 = udf(lambda z: ngrams(z, 3), StringType())
+
+df = df.select('*', f1('body').alias('unigrams'), f2('body').alias('bigrams'), f3('body').alias('trigrams'))
 
 # TODO: TASK 5
 """
