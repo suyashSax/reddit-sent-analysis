@@ -135,7 +135,8 @@ def doStuff(grams):
     return res
 
 f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
-data = df.select('*', f('body').alias('grams'))
+joined = df.join(labeled, ["id"])
+data = joined.select('*', f('body').alias('grams'))
 
 # TODO: TASK 6: PROBABLY THE HARDEST PART
 """
@@ -146,5 +147,10 @@ PIPELINE
 from pyspark.ml.feature import CountVectorizer
 
 # JOIN
-joined = labeled.join(data, ["id"])
 cv = CountVectorizer(inputCol="grams", outputCol="feature", minDF=5.0, binary=True, vocabSize=1<<18)
+model = cv.fit(data)
+result = model.transform(data)
+result.show(truncate=False)
+
+# Checkpoint It
+result.write.parquet("result.parquet")
