@@ -10,6 +10,7 @@ import itertools
 from itertools import chain
 from pyspark.sql.types import *
 from pyspark.sql.types import StringType
+from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import udf
 
 sqlContext = SQLContext(sc)
@@ -124,6 +125,9 @@ Why is given table not normalized?
 """
 Spark UDF for n-gram generation on the comment body...
 """
+
+joined = df.join(labeled, ["id"])
+
 from cleantext import sanitize
 
 def doStuff(grams):
@@ -135,7 +139,6 @@ def doStuff(grams):
     return res
 
 f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
-joined = df.join(labeled, ["id"])
 data = joined.select('*', f('body').alias('grams'))
 
 # TODO: TASK 6: PROBABLY THE HARDEST PART
@@ -153,4 +156,28 @@ result = model.transform(data)
 result.show(truncate=False)
 
 # Checkpoint It
-result.write.parquet("result.parquet")
+# result.write.parquet("result.parquet")
+
+# Read from checkpointed Parquet
+result = sqlContext.read.parquet("result.parquet")
+
+# Functions to return 1 or 0 for a label score
+def negative_udf(label):
+    if(label == -1):
+        return 1
+    return 0
+
+def positive_column(label):
+    if(label == 1): return 1
+    else:
+        return 0
+
+# TODO: process Gop and Dem columns for extra credit
+
+# add negative column to result
+neg = udf(lambda x: negative_udf(x), IntegerType())
+negative = result.select('*', neg('trump').alias('negative'))
+
+# add positive column to negative
+pos = udf(lambda x: positive_column(x), IntegerType())
+positive_negative = negative.select('*', pos('trump').alias('positive'))
