@@ -26,8 +26,10 @@ df = sqlContext.read.parquet("comments-minimal.parquet")
 """
 comments = sqlContext.read.json("comments-minimal.json.bz2")
 submissions = sqlContext.read.json("submissions.json.bz2")
-labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=":", inferSchema="true", header="true")
 """
+
+labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=":", inferSchema="true", header="true")
+
 # TASK 2
 
 # QUESTION 1:
@@ -121,11 +123,17 @@ Why is given table not normalized?
 """
 Spark UDF for n-gram generation on the comment body...
 """
-from cleantext import ngrams
+from cleantext import sanitize
 
-sqlContext.udf.register("func", ngrams)
-f = udf(lambda x: sanitize(x)[1:], ArrayType(StringType()));
-df_grams = df.select('*', f('body').alias('grams'))
+def doStuff(grams):
+    res = []
+    for gram in grams:
+        for str in gram.split():
+            res.append(str)
+    return res
+
+f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
+data = df.select('*', f('body').alias('grams'))
 
 # TODO: TASK 6: PROBABLY THE HARDEST PART
 """
