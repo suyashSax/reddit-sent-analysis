@@ -28,7 +28,8 @@ comments = sqlContext.read.json("comments-minimal.json.bz2")
 submissions = sqlContext.read.json("submissions.json.bz2")
 """
 
-labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=":", inferSchema="true", header="true")
+labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=",", inferSchema="true", header="true")
+labeled =  labeled.toDF("id", "dem", "gop", "trump")
 
 # TASK 2
 
@@ -129,7 +130,8 @@ def doStuff(grams):
     res = []
     for gram in grams:
         for str in gram.split():
-            res.append(str)
+            if str is not None:
+                res.append(str)
     return res
 
 f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
@@ -141,3 +143,8 @@ PIPELINE
 1. CountVectorizer to turn raw features into Spark ML feature vector
 2. StringIndexer
 """
+from pyspark.ml.feature import CountVectorizer
+
+# JOIN
+joined = labeled.join(data, ["id"])
+cv = CountVectorizer(inputCol="grams", outputCol="feature", minDF=5.0, binary=True, vocabSize=1<<18)
