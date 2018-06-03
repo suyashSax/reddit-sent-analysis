@@ -69,9 +69,9 @@ def negative_udf(label):
     return 0
 
 def positive_column(label):
-    if(label == 1): return 1
-    else:
-        return 0
+    if(label == 1):
+        return 1
+    return 0
 
 # TODO: process Gop and Dem columns for extra credit
 
