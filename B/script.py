@@ -126,23 +126,26 @@ posModel.save("pos.model")
 negModel.save("neg.model")
 
 # TASK 8
+min_df = positive_negative.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
+remove_t3_ = udf(lambda x: x[3:], StringType())
 
-min_df_temp=positive_negative.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
-def fix_link_id(link_id):
-    return link_id[3:]
-remove_t3_ = udf(lambda x: fix_link_id(x), StringType())
-min_df = min_df_temp.select('*', remove_t3_('link_id').alias('link_id_new'))
-min_df=min_df.drop('link_id')
+min_df = min_df.select('*', remove_t3_('link_id').alias('link_id_new'))
+min_df = min_df.drop('link_id')
 min_df = min_df.selectExpr("id as id", "created_utc as utc_created", "body as body", "author_flair_text as state", "link_id_new as link_id")
 
-submissions_renamed = submissions.withColumnRenamed('id', 'link_id')
+submissions = submissions.withColumnRenamed('id', 'link_id')
 joined_2 = min_df.join(submissions_renamed, ["link_id"])
 
-task_8_final = joined_2.select('id', 'link_id', 'utc_created', 'body', 'state')
+df8 = joined_2.select('id', 'title', 'link_id', 'utc_created', 'body', 'state')
 
-task_8_final = task_8_final.withColumnRenamed('utc_created', 'created_utc')
-task_8_final = task_8_final.withColumnRenamed('state', 'author_flair_text')
+df8 = df8.withColumnRenamed('utc_created', 'created_utc')
+df8 = df8.withColumnRenamed('state', 'author_flair_text')
 
-task_8_final.show(100, truncate=False)
+# TASK 9
+df8 = df8.where(df8["body"][0:3] != "&gt")
+df8 = df8.where(df8["body"].contains("/s") == False)
 
-#task_8_final.write.parquet("task_8.parquet")
+# Repeat task 4, 5 and 6A
+data = df8.select('*', f('body').alias('grams'))
+model = cv.fit(data)
+result = model.transform(data)

@@ -87,23 +87,3 @@ Why is given table not normalized?
 """
 
 # READ: https://docs.databricks.com/spark/latest/spark-sql/udf-in-python.html
-
-# TASK 4 & 5
-"""
-Spark UDF for n-gram generation on the comment body...
-"""
-
-joined = df.join(labeled, ["id"])
-
-from cleantext import sanitize
-
-def doStuff(grams):
-    res = []
-    for gram in grams:
-        for str in gram.split():
-            if str is not None:
-                res.append(str)
-    return res
-
-f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
-data = joined.select('*', f('body').alias('grams'))
