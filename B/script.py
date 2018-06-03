@@ -70,23 +70,21 @@ neg_func = udf(lambda x: negative_udf(x), IntegerType())
 pos_func = udf(lambda x: positive_column(x), IntegerType())
 
 negative = result.select('*', neg_func('trump').alias('negative'))
-# add positive column to negative
 positive_negative = negative.select('*', pos_func('trump').alias('positive'))
 
-#
-neg = positive_negative.where(positive_negative['negative']==1)
-pos = positive_negative.where(positive_negative['positive']==1)
+# neg = positive_negative.where(positive_negative['negative']==1)
+# pos = positive_negative.where(positive_negative['positive']==1)
 
-neg = neg.withColumnRenamed('negative', 'label')
-pos = pos.withColumnRenamed('positive', 'label')
+neg = positive_negative.withColumnRenamed('negative', 'label')
+pos = positive_negative.withColumnRenamed('positive', 'label')
 
 # TASK 7
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
-poslr = LogisticRegression(labelCol="positive", featuresCol="feature", maxIter=10)
-neglr = LogisticRegression(labelCol="negative", featuresCol="feature", maxIter=10)
+poslr = LogisticRegression(labelCol="label", featuresCol="feature", maxIter=10)
+neglr = LogisticRegression(labelCol="label", featuresCol="feature", maxIter=10)
 
 posEvaluator = BinaryClassificationEvaluator()
 negEvaluator = BinaryClassificationEvaluator()
@@ -108,11 +106,11 @@ negCrossval = CrossValidator(
 posTrain, posTest = pos.randomSplit([0.5, 0.5])
 negTrain, negTest = neg.randomSplit([0.5, 0.5])
 
-pos = positive_negative.where(positive_negative['positive']==1)
-neg = positive_negative.where(positive_negative['negative']==1)
-
 print("Training positive classifier...")
 posModel = posCrossval.fit(posTrain)
 
 print("Training negative classifier...")
-negModel = negCrossval.fit(negTrain
+negModel = negCrossval.fit(negTrain)
+
+posModel.save("pos.model")
+negModel.save("neg.model")
