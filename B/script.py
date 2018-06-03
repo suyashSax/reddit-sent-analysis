@@ -124,3 +124,25 @@ negModel = negCrossval.fit(negTrain)
 
 posModel.save("pos.model")
 negModel.save("neg.model")
+
+# TASK 8
+
+min_df_temp=positive_negative.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
+def fix_link_id(link_id):
+    return link_id[3:]
+remove_t3_ = udf(lambda x: fix_link_id(x), StringType())
+min_df = min_df_temp.select('*', remove_t3_('link_id').alias('link_id_new'))
+min_df=min_df.drop('link_id')
+min_df = min_df.selectExpr("id as id", "created_utc as utc_created", "body as body", "author_flair_text as state", "link_id_new as link_id")
+
+submissions_renamed = submissions.withColumnRenamed('id', 'link_id')
+joined_2 = min_df.join(submissions_renamed, ["link_id"])
+
+task_8_final = joined_2.select('id', 'link_id', 'utc_created', 'body', 'state')
+
+task_8_final = task_8_final.withColumnRenamed('utc_created', 'created_utc')
+task_8_final = task_8_final.withColumnRenamed('state', 'author_flair_text')
+
+task_8_final.show(100, truncate=False)
+
+#task_8_final.write.parquet("task_8.parquet")
