@@ -12,22 +12,22 @@ from pyspark.sql.types import *
 from pyspark.sql.types import StringType
 from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import udf
-from pyspark.ml.feature import CountVectorizer
+from pyspark.ml.feature import CountVectorizer, CountVectorizerModel
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 sqlContext = SQLContext(sc)
-
-# Parquet Creation
-"""
-df = spark.read.json("comments-minimal.json.bz2")
-df.write.parquet("comments-minimal.parquet")
-"""
 
 sc.addPyFile("cleantext.py")
 comments = sqlContext.read.parquet("comments-minimal.parquet")
 submissions = sqlContext.read.parquet("submissions.parquet")
 
 df = comments
+# Parquet Creation
 """
+df = spark.read.json("comments-minimal.json.bz2")
+df.write.parquet("comments-minimal.parquet")
 comments = sqlContext.read.json("comments-minimal.json.bz2")
 submissions = sqlContext.read.json("submissions.json.bz2")
 """
@@ -55,7 +55,6 @@ data = joined.select('*', f('body').alias('grams'))
 cv = CountVectorizer(inputCol="grams", outputCol="feature", minDF=5.0, binary=True, vocabSize=1<<18)
 model = cv.fit(data)
 result = model.transform(data)
-result.show(truncate=False)
 
 # Checkpoint It
 # result.write.parquet("result.parquet")
@@ -90,10 +89,6 @@ neg = positive_negative.withColumnRenamed('negative', 'label')
 pos = positive_negative.withColumnRenamed('positive', 'label')
 
 # TASK 7
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
-
 poslr = LogisticRegression(labelCol="label", featuresCol="feature", maxIter=10)
 neglr = LogisticRegression(labelCol="label", featuresCol="feature", maxIter=10)
 
@@ -147,4 +142,22 @@ df8 = df8.where(df8["body"][0:3] != "&gt")
 df8 = df8.where(df8["body"].contains("/s") == False)
 
 # Repeat task 4, 5 and 6A
-data = df8.select('*', f('body').alias('grams'))
+df9 = df8.select('*', f('body').alias('grams'))
+r9 = model.transform(df9)
+posResult = posModel.transform(r9)
+negResult = negModel.transform(r9)
+
+def posProb(x):
+    if x > 0.2:
+        return 1
+    else:
+        return 0
+
+def negProb(x):
+    if x > 0.25:
+        return 1
+    else:
+        return 0
+
+posFunc = udf(lambda x: posProb(x), IntegerType())
+negFunc = udf(lambda x: negProb(x), IntegerType())
