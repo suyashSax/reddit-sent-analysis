@@ -12,6 +12,7 @@ from pyspark.sql.types import *
 from pyspark.sql.types import StringType
 from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import udf
+from pyspark.ml.feature import CountVectorizer
 
 sqlContext = SQLContext(sc)
 
@@ -22,8 +23,10 @@ df.write.parquet("comments-minimal.parquet")
 """
 
 sc.addPyFile("cleantext.py")
-df = sqlContext.read.parquet("comments-minimal.parquet")
+comments = sqlContext.read.parquet("comments-minimal.parquet")
+submissions = sqlContext.read.parquet("submissions.parquet")
 
+df = comments
 """
 comments = sqlContext.read.json("comments-minimal.json.bz2")
 submissions = sqlContext.read.json("submissions.json.bz2")
@@ -49,8 +52,6 @@ f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
 data = joined.select('*', f('body').alias('grams'))
 
 # TASK 6
-from pyspark.ml.feature import CountVectorizer
-
 cv = CountVectorizer(inputCol="grams", outputCol="feature", minDF=5.0, binary=True, vocabSize=1<<18)
 model = cv.fit(data)
 result = model.transform(data)
@@ -126,7 +127,7 @@ posModel.save("pos.model")
 negModel.save("neg.model")
 
 # TASK 8
-min_df = positive_negative.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
+min_df = comments.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
 remove_t3_ = udf(lambda x: x[3:], StringType())
 
 min_df = min_df.select('*', remove_t3_('link_id').alias('link_id_new'))
@@ -134,7 +135,7 @@ min_df = min_df.drop('link_id')
 min_df = min_df.selectExpr("id as id", "created_utc as utc_created", "body as body", "author_flair_text as state", "link_id_new as link_id")
 
 submissions = submissions.withColumnRenamed('id', 'link_id')
-joined_2 = min_df.join(submissions_renamed, ["link_id"])
+joined_2 = min_df.join(submissions, ["link_id"])
 
 df8 = joined_2.select('id', 'title', 'link_id', 'utc_created', 'body', 'state')
 
@@ -147,5 +148,3 @@ df8 = df8.where(df8["body"].contains("/s") == False)
 
 # Repeat task 4, 5 and 6A
 data = df8.select('*', f('body').alias('grams'))
-model = cv.fit(data)
-result = model.transform(data)
