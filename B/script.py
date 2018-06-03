@@ -3,7 +3,7 @@
 
 #!/usr/bin/env python
 
-# Boilerplate
+# TASK 1
 
 from pyspark.sql import SQLContext
 import itertools
@@ -32,15 +32,25 @@ submissions = sqlContext.read.json("submissions.json.bz2")
 labeled = sqlContext.read.load("labeled_data.csv", format="csv", sep=",", inferSchema="true", header="true")
 labeled =  labeled.toDF("id", "dem", "gop", "trump")
 
+# TASK 4 & 5
+joined = df.join(labeled, ["id"])
+
+from cleantext import sanitize
+
+def doStuff(grams):
+    res = []
+    for gram in grams:
+        for str in gram.split():
+            if str is not None:
+                res.append(str)
+    return res
+
+f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
+data = joined.select('*', f('body').alias('grams'))
+
 # TASK 6
-"""
-PIPELINE
-1. CountVectorizer to turn raw features into Spark ML feature vector
-2. StringIndexer
-"""
 from pyspark.ml.feature import CountVectorizer
 
-# JOIN
 cv = CountVectorizer(inputCol="grams", outputCol="feature", minDF=5.0, binary=True, vocabSize=1<<18)
 model = cv.fit(data)
 result = model.transform(data)
@@ -65,7 +75,7 @@ def positive_column(label):
 
 # TODO: process Gop and Dem columns for extra credit
 
-# add negative column to result
+# Add negative column to result
 neg_func = udf(lambda x: negative_udf(x), IntegerType())
 pos_func = udf(lambda x: positive_column(x), IntegerType())
 
