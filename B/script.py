@@ -118,24 +118,25 @@ posModel = posCrossval.fit(posTrain)
 print("Training negative classifier...")
 negModel = negCrossval.fit(negTrain)
 
-posModel.save("pos.model")
-negModel.save("neg.model")
+# posModel.save("pos.model")
+# negModel.save("neg.model")
 
 # TASK 8
-min_df = comments.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text')
+min_df = comments.select('id', 'link_id', 'created_utc', 'body', 'author_flair_text', 'score')
 remove_t3_ = udf(lambda x: x[3:], StringType())
 
 min_df = min_df.select('*', remove_t3_('link_id').alias('link_id_new'))
 min_df = min_df.drop('link_id')
-min_df = min_df.selectExpr("id as id", "created_utc as utc_created", "body as body", "author_flair_text as state", "link_id_new as link_id")
+min_df = min_df.selectExpr("id as id", "created_utc as utc_created", "body as body", "author_flair_text as state", "link_id_new as link_id", "score as comment_score")
 
 submissions = submissions.withColumnRenamed('id', 'link_id')
 joined_2 = min_df.join(submissions, ["link_id"])
 
-df8 = joined_2.select('id', 'title', 'link_id', 'utc_created', 'body', 'state')
+df8 = joined_2.select('id', 'title', 'link_id', 'utc_created', 'body', 'state', 'score', 'comment_score')
 
 df8 = df8.withColumnRenamed('utc_created', 'created_utc')
 df8 = df8.withColumnRenamed('state', 'author_flair_text')
+df8 = df8.withColumnRenamed('score', 'story_score')
 
 # TASK 9
 df8 = df8.where(df8["body"][0:3] != "&gt")
@@ -144,20 +145,29 @@ df8 = df8.where(df8["body"].contains("/s") == False)
 # Repeat task 4, 5 and 6A
 df9 = df8.select('*', f('body').alias('grams'))
 r9 = model.transform(df9)
-posResult = posModel.transform(r9)
-negResult = negModel.transform(r9)
 
 def posProb(x):
-    if x > 0.2:
+    if x[0] > 0.2:
         return 1
     else:
         return 0
 
 def negProb(x):
-    if x > 0.25:
+    if x[0] > 0.25:
         return 1
     else:
         return 0
 
 posFunc = udf(lambda x: posProb(x), IntegerType())
 negFunc = udf(lambda x: negProb(x), IntegerType())
+
+res = posModel.transform(r9)
+res = res.select('*', posFunc('probability').alias('pos'))
+res = res.drop('probability','prediction', 'rawPrediction', 'grams')
+
+res = negModel.transform(res)
+res = res.select('*', negFunc('probability').alias('neg'))
+res = res.drop('probability','prediction', 'rawPrediction', 'feature')
+
+sample = res.sample(False, 0.2, None)
+sample.write.parquet('sample-final.parquet')
