@@ -45,19 +45,5 @@ f = udf(lambda x: doStuff(sanitize(x)[1:]), ArrayType(StringType()));
 
 df8 = sqlContext.read.parquet('df9.parquet')
 
-df9 = df8.select('*', f('body').alias('grams'))
-r9 = model.transform(df9)
-
-posFunc = udf(lambda x: posProb(x), IntegerType())
-negFunc = udf(lambda x: negProb(x), IntegerType())
-
-res = posModel.transform(r9)
-res = res.select('*', posFunc('probability').alias('pos'))
-res = res.drop('probability','prediction', 'rawPrediction', 'grams')
-
-res = negModel.transform(res)
-res = res.select('*', negFunc('probability').alias('neg'))
-res = res.drop('probability','prediction', 'rawPrediction', 'feature')
-
 sample = res.sample(False, 0.1, None)
 sample.write.parquet('sample-final.parquet')

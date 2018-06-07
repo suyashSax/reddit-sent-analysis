@@ -107,12 +107,12 @@ posCrossval = CrossValidator(
     estimator=poslr,
     evaluator=posEvaluator,
     estimatorParamMaps=posParamGrid,
-    numFolds=5)
+    numFolds=2)
 negCrossval = CrossValidator(
     estimator=neglr,
     evaluator=negEvaluator,
     estimatorParamMaps=negParamGrid,
-    numFolds=5)
+    numFolds=2)
 
 posTrain, posTest = pos.randomSplit([0.5, 0.5])
 negTrain, negTest = neg.randomSplit([0.5, 0.5])
@@ -148,7 +148,11 @@ df8 = df8.where(df8["body"][0:3] != "&gt")
 df8 = df8.where(df8["body"].contains("/s") == False)
 
 # Repeat task 4, 5 and 6A
-df9 = df8.select('*', f('body').alias('grams'))
+
+# MAKE THE SAMPLE HERE
+sample = df8.sample(False, 0.2, None)
+
+df9 = sample.select('*', f('body').alias('grams'))
 r9 = model.transform(df9)
 
 def posProb(x):
@@ -174,9 +178,7 @@ res = negModel.transform(res)
 res = res.select('*', negFunc('probability').alias('neg'))
 res = res.drop('probability','prediction', 'rawPrediction', 'feature')
 
-sample = res.sample(False, 0.2, None)
-sample.write.parquet('sample-final.parquet')
-
+res.write.parquet('final.parquet')
 
 #TASK 10
 
