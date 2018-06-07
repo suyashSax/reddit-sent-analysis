@@ -165,6 +165,40 @@ def sanitize(text):
 
     return [text, unigrams, bigrams, trigrams]
 
+# rewrote sanitize so we don't have to use a UDF in Spark, which is slower
+def faster(text):
+
+    # 1. Replace new lines and tab characters with a single space.
+    text = replaceBreaks(text)
+
+    # 2. Remove URLs
+    text = splitURLs(text)
+
+    # 3. Split text on a single space.
+    # If there are multiple contiguous spaces, you will need to remove empty tokens after doing the split.
+    text = splitSpace(text)
+
+    # 4. Separate all external punctuation such as periods, commas, etc. into their own tokens
+    text = stepFour(text)
+
+    # 5
+    text = stepFive(text)
+
+    # 6. Convert all text to lowercase
+    text = text.lower()
+
+    # remove extraneous white space
+    text = re.sub("\\s+"," ", text)
+    text = text.strip()
+    text = apostrophe(text)
+
+    unigrams = ngrams(text, 1)
+    bigrams = ngrams(text, 2)
+    trigrams = ngrams(text, 3)
+
+    r = unigrams + " " + bigrams + " " + trigrams
+    return r.split()
+
 def replaceBreaks(s):
     s.replace('\n', ' ')
     s.replace('\t', ' ')
