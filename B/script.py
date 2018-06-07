@@ -23,6 +23,11 @@ sc.addPyFile("cleantext.py")
 comments = sqlContext.read.parquet("comments-minimal.parquet")
 submissions = sqlContext.read.parquet("submissions.parquet")
 
+model = CountVectorizerModel.load('countvec.model')
+posModel = CrossValidatorModel.load('pos.model')
+negModel = CrossValidatorModel.load('neg.model')
+
+
 df = comments
 # Parquet Creation
 """
@@ -147,13 +152,13 @@ df9 = df8.select('*', f('body').alias('grams'))
 r9 = model.transform(df9)
 
 def posProb(x):
-    if x[0] > 0.2:
+    if x[1] > 0.2:
         return 1
     else:
         return 0
 
 def negProb(x):
-    if x[0] > 0.25:
+    if x[1] > 0.25:
         return 1
     else:
         return 0

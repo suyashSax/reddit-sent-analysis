@@ -381,18 +381,6 @@ def main():
 
     for line in data:
         print(line)
-    # UNCOMMENT
-
-    # sanitize("hate to break it to you, but the (((globalists))) only exist in your tiny, blackened heart.")
-
-    # print(stepFour("\"oh you'll\""))
-
-
-    # print(data)
-
-
-    # for i in sanitize("I'm afraid I can't explain myself, sir. Because I am not myself, you see?"):
-    #     print (i)
 
 if __name__ == "__main__":
     # This is the Python main function.
