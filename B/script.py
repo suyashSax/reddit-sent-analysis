@@ -176,3 +176,26 @@ res = res.drop('probability','prediction', 'rawPrediction', 'feature')
 
 sample = res.sample(False, 0.2, None)
 sample.write.parquet('sample-final.parquet')
+
+
+#TASK 10
+
+task10_df = sqlContext.read.parquet("try5.parquet")
+
+sqlContext.registerDataFrameAsTable(task10, "task10")
+
+part_a = sqlContext.sql('select 100*avg(pos), 100*avg(neg) from task10')
+part_a.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_a.csv")
+
+part_b= sqlContext.sql('select 100*avg(pos), 100*avg(neg), DAYOFYEAR(FROM_UNIXTIME(created_utc)) from task10 group by DAYOFYEAR(FROM_UNIXTIME(created_utc)) ORDER BY DAYOFYEAR(FROM_UNIXTIME(created_utc))')
+part_b.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_b.csv")
+
+part_c = sqlContext.sql('select author_flair_text AS state,  100*avg(pos), 100*avg(neg) from task10 where author_flair_text IN (\'Alabama\', \'Alaska\', \'Arizona\', \'Arkansas\', \'California\', \'Colorado\', \'Connecticut\', \'Delaware\', \'District of Columbia\', \'Florida\', \'Georgia\', \'Hawaii\', \'Idaho\', \'Illinois\', \'Indiana\', \'Iowa\', \'Kansas\', \'Kentucky\', \'Louisiana\', \'Maine\', \'Maryland\', \'Massachusetts\', \'Michigan\', \'Minnesota\', \'Mississippi\', \'Missouri\', \'Montana\', \'Nebraska\', \'Nevada\', \'New Hampshire\', \'New Jersey\', \'New Mexico\', \'New York\', \'North Carolina\', \'North Dakota\', \'Ohio\', \'Oklahoma\', \'Oregon\', \'Pennsylvania\', \'Rhode Island\',\'South Carolina\', \'South Dakota\', \'Tennessee\', \'Texas\', \'Utah\', \'Vermont\', \'Virginia\', \'Washington\', \'West Virginia\', \'Wisconsin\', \'Wyoming\') group by author_flair_text ORDER BY author_flair_text')
+part_c.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_c.csv")
+
+
+part_d_by_comment_score = sqlContext.sql('select 100*avg(pos), 100*avg(neg), comment_score from task10 GROUP BY comment_score')
+part_d_by_comment_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_comment_score.csv")
+
+part_d_by_story_score = sqlContext.sql('select 100*avg(pos), 100*avg(neg), story_score from task10 GROUP BY story_score')
+part_d_by_story_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_story_score.csv")
