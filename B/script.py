@@ -23,11 +23,6 @@ sc.addPyFile("cleantext.py")
 comments = sqlContext.read.parquet("comments-minimal.parquet")
 submissions = sqlContext.read.parquet("submissions.parquet")
 
-model = CountVectorizerModel.load('countvec.model')
-posModel = CrossValidatorModel.load('pos.model')
-negModel = CrossValidatorModel.load('neg.model')
-
-
 df = comments
 # Parquet Creation
 """
@@ -107,12 +102,12 @@ posCrossval = CrossValidator(
     estimator=poslr,
     evaluator=posEvaluator,
     estimatorParamMaps=posParamGrid,
-    numFolds=2)
+    numFolds=5)
 negCrossval = CrossValidator(
     estimator=neglr,
     evaluator=negEvaluator,
     estimatorParamMaps=negParamGrid,
-    numFolds=2)
+    numFolds=5)
 
 posTrain, posTest = pos.randomSplit([0.5, 0.5])
 negTrain, negTest = neg.randomSplit([0.5, 0.5])
@@ -148,21 +143,17 @@ df8 = df8.where(df8["body"][0:3] != "&gt")
 df8 = df8.where(df8["body"].contains("/s") == False)
 
 # Repeat task 4, 5 and 6A
-
-# MAKE THE SAMPLE HERE
-sample = df8.sample(False, 0.2, None)
-
-df9 = sample.select('*', f('body').alias('grams'))
+df9 = df8.select('*', f('body').alias('grams'))
 r9 = model.transform(df9)
 
 def posProb(x):
-    if x[1] > 0.2:
+    if x[0] > 0.2:
         return 1
     else:
         return 0
 
 def negProb(x):
-    if x[1] > 0.25:
+    if x[0] > 0.25:
         return 1
     else:
         return 0
@@ -178,26 +169,36 @@ res = negModel.transform(res)
 res = res.select('*', negFunc('probability').alias('neg'))
 res = res.drop('probability','prediction', 'rawPrediction', 'feature')
 
-res.write.parquet('final.parquet')
+sample = res.sample(False, 0.2, None)
+sample.write.parquet('sample-final.parquet')
+
 
 #TASK 10
 
-task10_df = sqlContext.read.parquet("try5.parquet")
+task10_df = sqlContext.read.parquet("final.parquet")
 
-sqlContext.registerDataFrameAsTable(task10, "task10")
+sqlContext.registerDataFrameAsTable(task10_df, "task10")
 
-part_a = sqlContext.sql('select 100*avg(pos), 100*avg(neg) from task10')
+part_a = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative from task10')
 part_a.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_a.csv")
 
-part_b= sqlContext.sql('select 100*avg(pos), 100*avg(neg), DAYOFYEAR(FROM_UNIXTIME(created_utc)) from task10 group by DAYOFYEAR(FROM_UNIXTIME(created_utc)) ORDER BY DAYOFYEAR(FROM_UNIXTIME(created_utc))')
+part_b= sqlContext.sql('select avg(pos) as Positive, avg(neg) as Negative, DATE(FROM_UNIXTIME(created_utc)) as date from task10 group by date ORDER BY date')
 part_b.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_b.csv")
 
-part_c = sqlContext.sql('select author_flair_text AS state,  100*avg(pos), 100*avg(neg) from task10 where author_flair_text IN (\'Alabama\', \'Alaska\', \'Arizona\', \'Arkansas\', \'California\', \'Colorado\', \'Connecticut\', \'Delaware\', \'District of Columbia\', \'Florida\', \'Georgia\', \'Hawaii\', \'Idaho\', \'Illinois\', \'Indiana\', \'Iowa\', \'Kansas\', \'Kentucky\', \'Louisiana\', \'Maine\', \'Maryland\', \'Massachusetts\', \'Michigan\', \'Minnesota\', \'Mississippi\', \'Missouri\', \'Montana\', \'Nebraska\', \'Nevada\', \'New Hampshire\', \'New Jersey\', \'New Mexico\', \'New York\', \'North Carolina\', \'North Dakota\', \'Ohio\', \'Oklahoma\', \'Oregon\', \'Pennsylvania\', \'Rhode Island\',\'South Carolina\', \'South Dakota\', \'Tennessee\', \'Texas\', \'Utah\', \'Vermont\', \'Virginia\', \'Washington\', \'West Virginia\', \'Wisconsin\', \'Wyoming\') group by author_flair_text ORDER BY author_flair_text')
+part_c = sqlContext.sql('select author_flair_text AS state,  100*avg(pos) as Positive, 100*avg(neg) as Negative. 100*avg(pos) - 100*avg(neg) as Difference from task10 where author_flair_text IN (\'Alabama\', \'Alaska\', \'Arizona\', \'Arkansas\', \'California\', \'Colorado\', \'Connecticut\', \'Delaware\', \'District of Columbia\', \'Florida\', \'Georgia\', \'Hawaii\', \'Idaho\', \'Illinois\', \'Indiana\', \'Iowa\', \'Kansas\', \'Kentucky\', \'Louisiana\', \'Maine\', \'Maryland\', \'Massachusetts\', \'Michigan\', \'Minnesota\', \'Mississippi\', \'Missouri\', \'Montana\', \'Nebraska\', \'Nevada\', \'New Hampshire\', \'New Jersey\', \'New Mexico\', \'New York\', \'North Carolina\', \'North Dakota\', \'Ohio\', \'Oklahoma\', \'Oregon\', \'Pennsylvania\', \'Rhode Island\',\'South Carolina\', \'South Dakota\', \'Tennessee\', \'Texas\', \'Utah\', \'Vermont\', \'Virginia\', \'Washington\', \'West Virginia\', \'Wisconsin\', \'Wyoming\') group by author_flair_text ORDER BY author_flair_text')
 part_c.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_c.csv")
 
 
-part_d_by_comment_score = sqlContext.sql('select 100*avg(pos), 100*avg(neg), comment_score from task10 GROUP BY comment_score')
+part_d_by_comment_score = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative, comment_score from task10 GROUP BY comment_score')
 part_d_by_comment_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_comment_score.csv")
 
-part_d_by_story_score = sqlContext.sql('select 100*avg(pos), 100*avg(neg), story_score from task10 GROUP BY story_score')
+part_d_by_story_score = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative, story_score from task10 GROUP BY story_score')
 part_d_by_story_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_story_score.csv")
+
+
+state_posneg_diff = sqlContext.sql('select author_flair_text AS state,  100*avg(pos) - 100*avg(neg) as Difference from task10 where author_flair_text IN (\'Alabama\', \'Alaska\', \'Arizona\', \'Arkansas\', \'California\', \'Colorado\', \'Connecticut\', \'Delaware\', \'District of Columbia\', \'Florida\', \'Georgia\', \'Hawaii\', \'Idaho\', \'Illinois\', \'Indiana\', \'Iowa\', \'Kansas\', \'Kentucky\', \'Louisiana\', \'Maine\', \'Maryland\', \'Massachusetts\', \'Michigan\', \'Minnesota\', \'Mississippi\', \'Missouri\', \'Montana\', \'Nebraska\', \'Nevada\', \'New Hampshire\', \'New Jersey\', \'New Mexico\', \'New York\', \'North Carolina\', \'North Dakota\', \'Ohio\', \'Oklahoma\', \'Oregon\', \'Pennsylvania\', \'Rhode Island\',\'South Carolina\', \'South Dakota\', \'Tennessee\', \'Texas\', \'Utah\', \'Vermont\', \'Virginia\', \'Washington\', \'West Virginia\', \'Wisconsin\', \'Wyoming\') group by author_flair_text ORDER BY author_flair_text')
+state_posneg_diff.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("difference.csv")
+
+
+most_positive_stories = sqlContext.sql('select link_id as most_positive from task10 GROUP BY link_id ORDER BY avg(pos) DESC LIMIT 10')
+most_negative_stories = sqlContext.sql('select link_id as most_negative from task10 GROUP BY link_id ORDER BY avg(neg) DESC LIMIT 10')
