@@ -36,7 +36,13 @@ PLOT 1: SENTIMENT OVER TIME (TIME SERIES PLOT)
 # Assumes a file called time_data.csv that has columns
 # date, Positive, Negative. Use absolute path.
 
-ts = pd.read_csv("time_data.csv")
+#djt
+#ts = pd.read_csv("time_data.csv")
+#dem
+ts = pd.read_csv("time_data_dem.csv")
+#gop
+#ts = pd.read_csv("time_data_gop.csv")
+
 # Remove erroneous row.
 ts = ts[ts['date'] != '2018-12-31']
 
@@ -44,11 +50,24 @@ plt.figure(figsize=(12,5))
 ts.date = pd.to_datetime(ts['date'], format='%Y-%m-%d')
 ts.set_index(['date'],inplace=True)
 
-ax1 = ts.plot(title="President Trump Sentiment on /r/politics Over Time",
-        color=['green', 'red'],
-       ylim=(0, 1.05))
+#djt
+#ax1 = ts.plot(title="President Trump Sentiment on /r/politics Over Time", color=['green', 'red'], ylim=(0, 1.05))
+
+#dem
+ax1 = ts.plot(title="Democratic Sentiment on /r/politics Over Time", color=['green', 'red'], ylim=(0, 1.05))
+
+#gop
+#ax1 = ts.plot(title="GOP Sentiment on /r/politics Over Time", color=['green', 'red'], ylim=(0, 1.05))
+
 ax1.plot()
-plt.savefig("part1.png")
+
+#djt
+#plt.savefig("part1.png")
+#dem
+plt.savefig("part1_dem.png")
+#gop
+#plt.savefig("part1_gop.png")
+
 plt.clf()
 
 """
@@ -61,7 +80,12 @@ PLOT 2: SENTIMENT BY STATE (POSITIVE AND NEGATIVE SEPARATELY)
 #
 # You should use the FULL PATH to the file, just in case.
 
-state_data = pd.read_csv("state_data.csv")
+#djt
+#state_data = pd.read_csv("state_data.csv")
+#dem
+state_data = pd.read_csv("state_data_dem.csv")
+#gop
+#state_data = pd.read_csv("state_data_gop.csv")
 
 """
 You also need to download the following files. Put them somewhere convenient:
@@ -102,11 +126,26 @@ for nshape, seg in enumerate(m.states):
         color = rgb2hex(pos_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax2.add_patch(poly)
-plt.title('Positive Trump Sentiment Across the US')
+
+#djt
+#plt.title('Positive Trump Sentiment Across the US')
+#dem
+plt.title('Positive Democratic Sentiment Across the US')
+#gop
+#plt.title('Positive GOP Sentiment Across the US')
+
 plt.xlabel('')
 plt.ylabel('')
-plt.xkcd()
-plt.savefig("pos_map.png")
+#plt.xkcd()
+
+#djt
+#plt.savefig("pos_map.png")
+#dem
+plt.savefig("pos_map_dem.png")
+#gop
+#plt.savefig("pos_map_gop.png")
+
+
 plt.clf()
 
 m = Basemap(llcrnrlon=-119, llcrnrlat=22, urcrnrlon=-64, urcrnrlat=49,
@@ -136,17 +175,41 @@ for nshape, seg in enumerate(m.states):
         color = rgb2hex(neg_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax3.add_patch(poly)
-plt.title('Negative Trump Sentiment Across the US')
+
+#djt
+#plt.title('Negative Trump Sentiment Across the US')
+#dem
+plt.title('Negative Democratic Sentiment Across the US')
+#gop
+#plt.title('Negative GOP Sentiment Across the US')
+
 plt.xlabel('')
 plt.ylabel('')
-plt.savefig("neg_map.png")
+
+#djt
+#plt.savefig("neg_map.png")
+#dem
+plt.savefig("neg_map_dem.png")
+#gop
+#plt.savefig("neg_map_gop.png")
+
+
 plt.clf()
 
 #DIFFERENCE MAP
 m = Basemap(llcrnrlon=-119, llcrnrlat=22, urcrnrlon=-64, urcrnrlat=49,
         projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
 shp_info = m.readshapefile('st99_d00','states',drawbounds=True)  # No extension specified in path here.
-diff_state_data = pd.read_csv("difference.csv")
+
+#djt
+#diff_state_data = pd.read_csv("difference.csv")
+#dem
+diff_state_data = pd.read_csv("difference_dem.csv")
+#gop
+#diff_state_data = pd.read_csv("difference_gop.csv")
+
+
+
 diff_data = dict(zip(diff_state_data.state, diff_state_data.Difference))
 
 diff_colors = {}
@@ -170,10 +233,24 @@ for nshape, seg in enumerate(m.states):
         color = rgb2hex(diff_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax4.add_patch(poly)
-plt.title('Difference (POS-NEG) Trump Sentiment Across the US')
+#djt
+#plt.title('Difference (POS-NEG) Trump Sentiment Across the US')
+#dem
+plt.title('Difference (POS-NEG) Democratic Sentiment Across the US')
+#gop
+#plt.title('Difference (POS-NEG) GOP Sentiment Across the US')
+
 plt.xlabel('')
 plt.ylabel('')
-plt.savefig("diff_map.png")
+
+#djt
+#plt.savefig("diff_map.png")
+#dem
+plt.savefig("diff_map_dem.png")
+#gop
+#plt.savefig("diff_map_gop.png")
+
+
 plt.clf()
 
 # SOURCE: https://stackoverflow.com/questions/39742305/how-to-use-basemap-python-to-plot-us-with-50-states
@@ -192,7 +269,14 @@ PLOT 5A: SENTIMENT BY STORY SCORE
 
 # Assumes a CSV file called submission_score.csv with the following coluns
 # submission_score, Positive, Negative
-story = pd.read_csv("submission_score.csv")
+
+#djt
+#story = pd.read_csv("submission_score.csv")
+#dem
+story = pd.read_csv("story_score_dem.csv")
+#gop
+#story = pd.read_csv("story_score_gop.csv")
+
 plt.figure(figsize=(12,5))
 fig = plt.figure()
 ax5 = fig.add_subplot(111)
@@ -201,10 +285,23 @@ ax5.scatter(story['submission_score'], story['Positive'], s=10, c='b', marker="s
 ax5.scatter(story['submission_score'], story['Negative'], s=10, c='r', marker="o", label='Negative')
 plt.legend(loc='lower right');
 
-plt.xlabel('President Trump Sentiment by Submission Score')
+#djt
+#plt.xlabel('President Trump Sentiment by Submission Score')
+#dem
+plt.xlabel('Democratic Sentiment by Submission Score')
+#gop
+#plt.xlabel('GOP Sentiment by Submission Score')
+
 plt.ylabel("Percent Sentiment")
 plt.show()
-plt.savefig("plot5a.png")
+
+#djt
+#plt.savefig("plot5a.png")
+#dem
+plt.savefig("plot5a_dem.png")
+#gop
+#plt.savefig("plot5a_gop.png")
+
 plt.clf()
 
 """
@@ -217,7 +314,13 @@ PLOT 5B: SENTIMENT BY COMMENT SCORE
 # Assumes a CSV file called comment_score.csv with the following columns
 # comment_score, Positive, Negative
 
-story = pd.read_csv("comment_score.csv")
+#djt
+#story = pd.read_csv("comment_score.csv")
+#dem
+story = pd.read_csv("comment_score_dem.csv")
+#gop
+#story = pd.read_csv("comment_score_gop.csv")
+
 plt.figure(figsize=(12,5))
 fig = plt.figure()
 ax6 = fig.add_subplot(111)
@@ -226,7 +329,20 @@ ax6.scatter(story['comment_score'], story['Positive'], s=10, c='b', marker="s", 
 ax6.scatter(story['comment_score'], story['Negative'], s=10, c='r', marker="o", label='Negative')
 plt.legend(loc='lower right');
 
-plt.xlabel('President Trump Sentiment by Comment Score')
+#djt
+#plt.xlabel('President Trump Sentiment by Comment Score')
+#dem
+plt.xlabel('Democratic Sentiment by Comment Score')
+#gop
+#plt.xlabel('GOP Sentiment by Comment Score')
+
 plt.ylabel("Percent Sentiment")
-plt.savefig("plot5b.png")
+
+#djt
+#plt.savefig("plot5b.png")
+#dem
+plt.savefig("plot5b_dem.png")
+#gop
+#plt.savefig("plot5b_gop.png")
+
 plt.clf()
