@@ -81,11 +81,11 @@ PLOT 2: SENTIMENT BY STATE (POSITIVE AND NEGATIVE SEPARATELY)
 # You should use the FULL PATH to the file, just in case.
 
 #djt
-#state_data = pd.read_csv("state_data.csv")
+state_data = pd.read_csv("state_data.csv")
 #dem
-#state_data = pd.read_csv("state_data_dem.csv")
+# state_data = pd.read_csv("state_data_dem.csv")
 #gop
-state_data = pd.read_csv("state_data_gop.csv")
+# state_data = pd.read_csv("state_data_gop.csv")
 
 """
 You also need to download the following files. Put them somewhere convenient:
@@ -120,30 +120,30 @@ for nshape, seg in enumerate(m.states):
     # skip Puerto Rico and DC
     if statenames[nshape] not in ['District of Columbia', 'Puerto Rico']:
         if statenames[nshape] == 'Alaska':
-            seg = list(map(lambda (x,y): (0.30*x + 1100000, 0.30*y-1300000), seg))
+            seg = list(map(lambda (x,y): (0.25*x + 1300000, 0.25*y-861000), seg))
         if statenames[nshape] == 'Hawaii':
-            seg = list(map(lambda (x,y): (x + 5100000, y-900000), seg))
+            seg = list(map(lambda (x,y): (x + 4000000, y-1200000), seg))
         color = rgb2hex(pos_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax2.add_patch(poly)
 
 #djt
-#plt.title('Positive Trump Sentiment Across the US')
+plt.title('Positive Trump Sentiment Across the US')
 #dem
-#plt.title('Positive Democratic Sentiment Across the US')
+# plt.title('Positive Democratic Sentiment Across the US')
 #gop
-plt.title('Positive GOP Sentiment Across the US')
+# plt.title('Positive GOP Sentiment Across the US')
 
 plt.xlabel('')
 plt.ylabel('')
 #plt.xkcd()
 
 #djt
-#plt.savefig("pos_map.png")
+plt.savefig("pos_map.png")
 #dem
-#plt.savefig("pos_map_dem.png")
+# plt.savefig("pos_map_dem.png")
 #gop
-plt.savefig("pos_map_gop.png")
+# plt.savefig("pos_map_gop.png")
 
 
 plt.clf()
@@ -172,26 +172,30 @@ ax3 = plt.gca() # get current axes instance
 for nshape, seg in enumerate(m.states):
     # skip Puerto Rico and DC
     if statenames[nshape] not in ['District of Columbia', 'Puerto Rico']:
+        if statenames[nshape] == 'Alaska':
+            seg = list(map(lambda (x,y): (0.25*x + 1300000, 0.25*y-861000), seg))
+        if statenames[nshape] == 'Hawaii':
+            seg = list(map(lambda (x,y): (x + 4000000, y-1200000), seg))
         color = rgb2hex(neg_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax3.add_patch(poly)
 
 #djt
-#plt.title('Negative Trump Sentiment Across the US')
+plt.title('Negative Trump Sentiment Across the US')
 #dem
-#plt.title('Negative Democratic Sentiment Across the US')
+# plt.title('Negative Democratic Sentiment Across the US')
 #gop
-plt.title('Negative GOP Sentiment Across the US')
+# plt.title('Negative GOP Sentiment Across the US')
 
 plt.xlabel('')
 plt.ylabel('')
 
 #djt
-#plt.savefig("neg_map.png")
+plt.savefig("neg_map.png")
 #dem
-#plt.savefig("neg_map_dem.png")
+# plt.savefig("neg_map_dem.png")
 #gop
-plt.savefig("neg_map_gop.png")
+# plt.savefig("neg_map_gop.png")
 
 
 plt.clf()
@@ -202,11 +206,11 @@ m = Basemap(llcrnrlon=-119, llcrnrlat=22, urcrnrlon=-64, urcrnrlat=49,
 shp_info = m.readshapefile('st99_d00','states',drawbounds=True)  # No extension specified in path here.
 
 #djt
-#diff_state_data = pd.read_csv("difference.csv")
+diff_state_data = pd.read_csv("difference.csv")
 #dem
-#diff_state_data = pd.read_csv("difference_dem.csv")
+# diff_state_data = pd.read_csv("difference_dem.csv")
 #gop
-diff_state_data = pd.read_csv("difference_gop.csv")
+# diff_state_data = pd.read_csv("difference_gop.csv")
 
 
 
@@ -216,7 +220,7 @@ diff_colors = {}
 statenames = []
 diff_cmap = plt.cm.Purples # use 'Purples' colormap
 
-vmin = 54.91; vmax = 70.37 # set range.
+vmin = 45.91; vmax = 75.37 # set range.
 for shapedict in m.states_info:
     statename = shapedict['NAME']
     # skip DC and Puerto Rico.
@@ -230,25 +234,29 @@ ax4 = plt.gca() # get current axes instance
 for nshape, seg in enumerate(m.states):
     # skip Puerto Rico and DC
     if statenames[nshape] not in ['District of Columbia', 'Puerto Rico']:
+        if statenames[nshape] == 'Alaska':
+            seg = list(map(lambda (x,y): (0.25*x + 1300000, 0.25*y-861000), seg))
+        if statenames[nshape] == 'Hawaii':
+            seg = list(map(lambda (x,y): (x + 4000000, y-1200000), seg))
         color = rgb2hex(diff_colors[statenames[nshape]])
         poly = Polygon(seg, facecolor=color, edgecolor=color)
         ax4.add_patch(poly)
 #djt
-#plt.title('Difference (POS-NEG) Trump Sentiment Across the US')
+plt.title('Difference (POS-NEG) Trump Sentiment Across the US')
 #dem
-#plt.title('Difference (POS-NEG) Democratic Sentiment Across the US')
+# plt.title('Difference (POS-NEG) Democratic Sentiment Across the US')
 #gop
-plt.title('Difference (POS-NEG) GOP Sentiment Across the US')
+# plt.title('Difference (POS-NEG) GOP Sentiment Across the US')
 
 plt.xlabel('')
 plt.ylabel('')
 
 #djt
-#plt.savefig("diff_map.png")
+plt.savefig("diff_map.png")
 #dem
-#plt.savefig("diff_map_dem.png")
+# plt.savefig("diff_map_dem.png")
 #gop
-plt.savefig("diff_map_gop.png")
+# plt.savefig("diff_map_gop.png")
 
 
 plt.clf()
