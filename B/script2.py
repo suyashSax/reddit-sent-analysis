@@ -93,7 +93,7 @@ dem_negative = result.select('*', neg_func('dem').alias('negative'))
 dem_positive_negative = dem_negative.select('*', pos_func('dem').alias('positive'))
 
 gop_negative = result.select('*', neg_func('gop').alias('negative'))
-gop_positive_negative = dem_negative.select('*', pos_func('gop').alias('positive'))
+gop_positive_negative = gop_negative.select('*', pos_func('gop').alias('positive'))
 
 
 # neg = positive_negative.where(positive_negative['negative']==1)
@@ -229,17 +229,17 @@ res_dem = dem_negModel.transform(res_dem)
 res_dem = res_dem.select('*', negFunc('probability').alias('neg'))
 res_dem = res_dem.drop('probability','prediction', 'rawPrediction', 'feature')
 
-res.write.parquet('final_dem.parquet')
+res_dem.write.parquet('final_dem.parquet')
 
-res_gop = posModel.transform(r9)
+res_gop = gop_posModel.transform(r9)
 res_gop = res_gop.select('*', posFunc('probability').alias('pos'))
 res_gop = res_gop.drop('probability','prediction', 'rawPrediction', 'grams')
 
-res_gop = negModel.transform(res_gop)
+res_gop = gop_negModel.transform(res_gop)
 res_gop = res_gop.select('*', negFunc('probability').alias('neg'))
 res_gop = res_gop.drop('probability','prediction', 'rawPrediction', 'feature')
 
-res.write.parquet('final_gop.parquet')
+res_gop.write.parquet('final_gop.parquet')
 
 #TASK 10
 
@@ -262,3 +262,30 @@ part_d_by_comment_score.repartition(1).write.format("com.databricks.spark.csv").
 
 part_d_by_story_score = sqlContext.sql('select 100*avg(pos), 100*avg(neg), story_score from task10 GROUP BY story_score')
 part_d_by_story_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_story_score.csv")
+
+# Question 3
+# Chose join from task 8: joined_2 = min_df.join(submissions, ["link_id"])
+joined_2_explain = min_df.join(submissions, ["link_id"]).explain()
+
+"""
+== Physical Plan ==
+Project [link_id#36222, id#74, utc_created#36219L, body#64, state#36221, comment_score#36223L, archived#110, author#111, author_cakeday#112, author_flair_css_class#113, author_flair_text#114, brand_safe#115, can_gild#116, can_mod_post#117, contest_mode#118, created_utc#119L, crosspost_parent#120, crosspost_parent_list#121, distinguished#122, domain#123, downs#124L, edited#125, gilded#126L, hidden#127, ... 41 more fields]
++- SortMergeJoin [link_id#36222], [link_id#36230], Inner
+   :- *(4) Sort [link_id#36222 ASC NULLS FIRST], false, 0
+   :  +- Exchange hashpartitioning(link_id#36222, 200)
+   :     +- *(3) Project [id#74, created_utc#70L AS utc_created#36219L, body#64, author_flair_text#63 AS state#36221, pythonUDF0#37029 AS link_id#36222, score#80L AS comment_score#36223L]
+   :        +- BatchEvalPython [<lambda>(link_id#76)], [author_flair_text#63, body#64, created_utc#70L, id#74, link_id#76, score#80L, pythonUDF0#37029]
+   :           +- *(2) Project [author_flair_text#63, body#64, created_utc#70L, id#74, link_id#76, score#80L]
+   :              +- *(2) Filter isnotnull(pythonUDF0#37028)
+   :                 +- BatchEvalPython [<lambda>(link_id#76)], [author_flair_text#63, body#64, created_utc#70L, id#74, link_id#76, score#80L, pythonUDF0#37028]
+   :                    +- *(1) FileScan parquet [author_flair_text#63,body#64,created_utc#70L,id#74,link_id#76,score#80L] Batched: true, Format: Parquet, Location: InMemoryFileIndex[file:/home/cs143/data/comments-minimal.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<author_flair_text:string,body:string,created_utc:bigint,id:string,link_id:string,score:big...
+   +- Sort [link_id#36230 ASC NULLS FIRST], false, 0
+      +- Exchange hashpartitioning(link_id#36230, 200)
+         +- Project [archived#110, author#111, author_cakeday#112, author_flair_css_class#113, author_flair_text#114, brand_safe#115, can_gild#116, can_mod_post#117, contest_mode#118, created_utc#119L, crosspost_parent#120, crosspost_parent_list#121, distinguished#122, domain#123, downs#124L, edited#125, gilded#126L, hidden#127, hide_score#128, id#129 AS link_id#36230, is_crosspostable#130, is_reddit_media_domain#131, is_self#132, is_video#133, ... 36 more fields]
+            +- Filter isnotnull(id#129)
+               +- FileScan parquet [archived#110,author#111,author_cakeday#112,author_flair_css_class#113,author_flair_text#114,brand_safe#115,can_gild#116,can_mod_post#117,contest_mode#118,created_utc#119L,crosspost_parent#120,crosspost_parent_list#121,distinguished#122,domain#123,downs#124L,edited#125,gilded#126L,hidden#127,hide_score#128,id#129,is_crosspostable#130,is_reddit_media_domain#131,is_self#132,is_video#133,... 36 more fields] Batched: false, Format: Parquet, Location: InMemoryFileIndex[file:/home/cs143/data/submissions.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(id)], ReadSchema: struct<archived:boolean,author:string,author_cakeday:boolean,author_flair_css_class:string,author...
+
+Spark seems to be using a SortMergeJoin, which involves sorting each table by the join key, "link_id", in ascending order with the null values first. Then it partitions the key-value pairs
+with a hash function on the keys to divide the data up. Then it projects the columns for each table from the corresponding parquet files. Finally it executes the merge join.
+
+"""
