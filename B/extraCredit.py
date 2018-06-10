@@ -56,7 +56,7 @@ part_d_by_comment_score_dem = sqlContext.sql('select 100*avg(pos) as Positive, 1
 part_d_by_comment_score_dem.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_comment_score_dem.csv")
 part_d_by_comment_score_gop = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative, comment_score from task10_gop GROUP BY comment_score')
 part_d_by_comment_score_gop.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_comment_score_gop.csv")
-part_d_by_comment_score = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative, comment_score from task10GROUP BY comment_score')
+part_d_by_comment_score = sqlContext.sql('select 100*avg(pos) as Positive, 100*avg(neg) as Negative, comment_score from task10 GROUP BY comment_score')
 part_d_by_comment_score.repartition(1).write.format("com.databricks.spark.csv").option("header", "true").save("task10_part_d_comment_score.csv")
 
 
